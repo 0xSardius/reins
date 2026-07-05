@@ -4,6 +4,8 @@
 
 Give your agent a wallet. Keep the reins.
 
+[Site](https://0xsardius.github.io/reins/) · [npm](https://www.npmjs.com/package/reins) · [Issues](https://github.com/0xSardius/reins/issues) · MIT
+
 `reins` is a lean, open-source TypeScript wallet that lets AI agents pay for
 pay-per-use APIs automatically over **x402** (v1 and v2) and the
 **Machine Payments Protocol (MPP)** — with every payment passing a programmable

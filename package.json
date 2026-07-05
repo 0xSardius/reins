@@ -3,6 +3,13 @@
   "version": "0.1.0",
   "description": "The guardrailed wallet for Solana AI agents — pay for x402 and MPP services automatically, with spend caps, daily budgets, and cooldowns.",
   "license": "MIT",
+  "author": "0xSardius",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0xSardius/reins.git"
+  },
+  "homepage": "https://0xsardius.github.io/reins/",
+  "bugs": "https://github.com/0xSardius/reins/issues",
   "type": "module",
   "keywords": [
     "solana",
