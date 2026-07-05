@@ -1,0 +1,65 @@
+{
+  "name": "reins",
+  "version": "0.1.0",
+  "description": "The guardrailed wallet for Solana AI agents — pay for x402 and MPP services automatically, with spend caps, daily budgets, and cooldowns.",
+  "license": "MIT",
+  "type": "module",
+  "keywords": [
+    "solana",
+    "x402",
+    "mpp",
+    "ai-agents",
+    "wallet",
+    "payments",
+    "usdc",
+    "micropayments"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "reins": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./policy": {
+      "types": "./dist/policy/index.d.ts",
+      "default": "./dist/policy/index.js"
+    },
+    "./x402": {
+      "types": "./dist/x402/index.d.ts",
+      "default": "./dist/x402/index.js"
+    },
+    "./mpp": {
+      "types": "./dist/mpp/index.d.ts",
+      "default": "./dist/mpp/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@solana-program/compute-budget": "^0.16.0",
+    "@solana-program/token": "^0.14.0",
+    "@solana/kit": "^6.5.0",
+    "mppx": "^0.8.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

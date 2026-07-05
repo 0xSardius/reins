@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+*.log
+
+# secrets — never commit keys
+.env
+.env.*
+!.env.example
+*.keypair.json
+.reins/
