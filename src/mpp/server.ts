@@ -64,12 +64,14 @@ export function solanaChargeServer(options: SolanaChargeServerOptions) {
       return { err: tx.meta?.err ?? null, instructions: message.instructions }
     })
 
-  return Method.toServer(solanaChargeMethod, {
-    defaults: {
-      currency: options.currency,
-      recipient: options.recipient,
-      network,
-    },
+  const defaults = {
+    currency: options.currency,
+    recipient: options.recipient,
+    network,
+  } as const
+
+  return Method.toServer<typeof solanaChargeMethod, typeof defaults>(solanaChargeMethod, {
+    defaults,
     // Normalize human token-unit amounts ("0.01") to atomic wire amounts.
     request({ request }) {
       const amount = request.amount as string | number

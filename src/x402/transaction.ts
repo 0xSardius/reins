@@ -39,6 +39,12 @@ export interface BuildExactSvmTransactionParams {
   /** Optional memo for server-side correlation. */
   memo?: string
   decimals?: number
+  /**
+   * Whether a create-ATA instruction may be inserted when the destination
+   * token account is missing. x402 v1 facilitators require TransferChecked at
+   * instruction index 2, so this must be false there; v2 and MPP allow it.
+   */
+  allowCreateAta?: boolean
 }
 
 /**
@@ -79,16 +85,18 @@ export async function buildExactSvmTransaction(
     getSetComputeUnitPriceInstruction({ microLamports: 1_000n }),
   ]
 
-  const destinationInfo = await rpc.getAccountInfo(destinationAta, { encoding: 'base64' }).send()
-  if (!destinationInfo.value) {
-    instructions.push(
-      getCreateAssociatedTokenIdempotentInstruction({
-        payer: params.signer,
-        ata: destinationAta,
-        owner,
-        mint,
-      }),
-    )
+  if (params.allowCreateAta !== false) {
+    const destinationInfo = await rpc.getAccountInfo(destinationAta, { encoding: 'base64' }).send()
+    if (!destinationInfo.value) {
+      instructions.push(
+        getCreateAssociatedTokenIdempotentInstruction({
+          payer: params.signer,
+          ata: destinationAta,
+          owner,
+          mint,
+        }),
+      )
+    }
   }
 
   instructions.push(

@@ -125,6 +125,7 @@ export async function payX402Challenge(
     feePayer: chosen.option.feePayer,
     memo: chosen.option.memo,
     decimals: chosen.intent.decimals,
+    allowCreateAta: chosen.option.version === 2,
   })
 
   const headers = new Headers(init?.headers)
