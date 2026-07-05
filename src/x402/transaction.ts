@@ -51,7 +51,12 @@ export interface BuildExactSvmTransactionParams {
  */
 export async function buildExactSvmTransaction(
   params: BuildExactSvmTransactionParams,
-): Promise<{ transaction: string; decimals: number }> {
+): Promise<{
+  transaction: string
+  decimals: number
+  /** The signed transaction object (fully signed when no external feePayer). */
+  signed: Awaited<ReturnType<typeof partiallySignTransactionMessageWithSigners>>
+}> {
   const rpc = getRpc(params.rpcUrl)
   const mint = address(params.asset)
   const owner = address(params.payTo)
@@ -117,5 +122,5 @@ export async function buildExactSvmTransaction(
   )
 
   const signed = await partiallySignTransactionMessageWithSigners(message)
-  return { transaction: getBase64EncodedWireTransaction(signed), decimals }
+  return { transaction: getBase64EncodedWireTransaction(signed), decimals, signed }
 }

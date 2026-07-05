@@ -38,6 +38,40 @@ export function getRpc(url: string): Rpc<SolanaRpcApi> {
   return rpc
 }
 
+/**
+ * Send a base64 wire transaction and poll until it reaches `confirmed`
+ * commitment. Polling (vs websockets) keeps short-lived agent processes lean.
+ */
+export async function sendAndConfirm(
+  rpcUrl: string,
+  wireTransaction: string,
+  { timeoutMs = 45_000, pollMs = 1_000 }: { timeoutMs?: number; pollMs?: number } = {},
+): Promise<string> {
+  const rpc = getRpc(rpcUrl)
+  const signature = await rpc
+    .sendTransaction(wireTransaction as Parameters<typeof rpc.sendTransaction>[0], {
+      encoding: 'base64',
+      preflightCommitment: 'confirmed',
+    })
+    .send()
+
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    const { value } = await rpc.getSignatureStatuses([signature]).send()
+    const status = value[0]
+    if (status) {
+      if (status.err) {
+        throw new Error(`Transaction ${signature} failed on-chain: ${JSON.stringify(status.err)}`)
+      }
+      if (status.confirmationStatus === 'confirmed' || status.confirmationStatus === 'finalized') {
+        return signature
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, pollMs))
+  }
+  throw new Error(`Timed out waiting for confirmation of ${signature}`)
+}
+
 const decimalsCache = new Map<string, number>([
   [USDC_MINT_MAINNET, 6],
   [USDC_MINT_DEVNET, 6],
