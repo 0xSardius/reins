@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>reins — the guardrailed wallet for Solana AI agents</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+<style>
+  :root {
+    --ground: #171009;
+    --panel: #221810;
+    --panel-2: #2a1e14;
+    --ink: #ecdfc8;
+    --muted: #a68f6f;
+    --faint: #6e5d45;
+    --brass: #c9963f;
+    --brass-bright: #e3b45e;
+    --oxblood: #b0503f;
+    --sage: #8fa96a;
+    --stitch: 1px dashed #4a3823;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --mono: ui-monospace, "Cascadia Code", "Source Code Pro", Consolas, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 600px at 70% -10%, #2b1e11 0%, transparent 60%),
+      radial-gradient(900px 500px at 0% 100%, #20150c 0%, transparent 55%),
+      var(--ground);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::after {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 28px; }
+  a { color: var(--brass-bright); text-decoration: none; border-bottom: 1px solid #6e5d4580; }
+  a:hover, a:focus-visible { color: var(--ink); border-bottom-color: var(--brass); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+  code { font-family: var(--mono); }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--brass);
+  }
+
+  /* ---------- hero ---------- */
+  header { padding: 72px 0 64px; border-bottom: var(--stitch); }
+  .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 480px); gap: 56px; align-items: center; }
+  @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } }
+
+  .wordmark {
+    font-size: clamp(64px, 9vw, 104px);
+    line-height: 0.95;
+    margin: 18px 0 6px;
+    font-weight: 400;
+    letter-spacing: -0.015em;
+  }
+  .wordmark .dot { color: var(--brass); }
+  .tagline {
+    font-style: italic;
+    font-size: clamp(21px, 2.6vw, 27px);
+    color: var(--ink);
+    margin: 10px 0 18px;
+    text-wrap: balance;
+  }
+  .tagline em { color: var(--brass-bright); font-style: inherit; }
+  .lede { color: var(--muted); max-width: 46ch; margin: 0 0 30px; }
+  .lede strong { color: var(--ink); font-weight: 600; }
+
+  .install {
+    display: inline-flex; align-items: center; gap: 14px;
+    font-family: var(--mono); font-size: 15px;
+    background: var(--panel);
+    border: 1px solid #3d2d1a;
+    border-radius: 6px;
+    padding: 13px 18px;
+    color: var(--ink);
+  }
+  .install .ps1 { color: var(--faint); user-select: none; }
+  .install .pkg { color: var(--brass-bright); }
+  .hero-links { margin-top: 18px; font-family: var(--mono); font-size: 13px; color: var(--faint); }
+  .hero-links span { margin-right: 18px; }
+
+  /* ---------- terminal ---------- */
+  .terminal {
+    background: #120c07;
+    border: 1px solid #3d2d1a;
+    border-radius: 10px;
+    box-shadow: 0 24px 60px -24px #000c, inset 0 1px 0 #ffffff0d;
+    overflow: hidden;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.75;
+  }
+  .terminal-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px;
+    background: #1c130b;
+    border-bottom: 1px solid #3d2d1a;
+    color: var(--faint);
+    font-size: 11.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .terminal-bar i { width: 9px; height: 9px; border-radius: 50%; background: #4a3823; }
+  .terminal-bar i:first-child { background: var(--oxblood); }
+  .terminal-body { padding: 16px 18px 20px; min-height: 285px; }
+  .tline { white-space: pre-wrap; word-break: break-word; opacity: 0; transform: translateY(3px); }
+  .tline.shown { opacity: 1; transform: none; transition: opacity 0.3s ease, transform 0.3s ease; }
+  .t-dim { color: var(--faint); }
+  .t-cmd { color: var(--ink); }
+  .t-ok { color: var(--sage); }
+  .t-pay { color: var(--brass-bright); }
+  .t-no { color: var(--oxblood); }
+  .cursor { display: inline-block; width: 8px; height: 15px; background: var(--brass); vertical-align: -2px; animation: blink 1.1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .tline { opacity: 1; transform: none; }
+    .cursor { animation: none; }
+  }
+
+  /* ---------- sections ---------- */
+  section { padding: 72px 0; border-bottom: var(--stitch); }
+  .section-head { margin-bottom: 40px; max-width: 62ch; }
+  h2 {
+    font-size: clamp(30px, 4vw, 40px);
+    font-weight: 400;
+    line-height: 1.15;
+    margin: 10px 0 14px;
+    text-wrap: balance;
+  }
+  .section-head p { color: var(--muted); margin: 0; }
+
+  /* guardrail cards */
+  .rails { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #3d2d1a; border: 1px solid #3d2d1a; border-radius: 10px; overflow: hidden; }
+  @media (max-width: 900px) { .rails { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 620px) { .rails { grid-template-columns: 1fr; } }
+  .rail {
+    background: var(--panel);
+    padding: 26px 24px 28px;
+    transition: background 0.25s ease;
+  }
+  .rail:hover { background: var(--panel-2); }
+  .rail code.rule {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brass);
+    background: #c9963f14;
+    border: 1px solid #c9963f2e;
+    border-radius: 3px;
+    padding: 3px 8px;
+    margin-bottom: 14px;
+  }
+  .rail h3 { font-size: 20px; font-weight: 600; margin: 0 0 8px; }
+  .rail p { margin: 0; color: var(--muted); font-size: 15.5px; }
+  .rail p code { font-size: 13px; color: var(--ink); }
+
+  /* flow */
+  .flow { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+  .flow li {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 22px;
+    padding: 22px 4px;
+    border-top: var(--stitch);
+  }
+  .flow li:last-child { border-bottom: var(--stitch); }
+  .flow .step {
+    font-family: var(--mono);
+    color: var(--brass);
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    padding-top: 4px;
+  }
+  .flow h3 { margin: 0 0 4px; font-size: 19px; font-weight: 600; }
+  .flow p { margin: 0; color: var(--muted); font-size: 15.5px; max-width: 68ch; }
+  .flow p code { font-size: 13px; color: var(--ink); background: #ffffff0a; padding: 1px 5px; border-radius: 3px; }
+
+  /* protocols */
+  .protocols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 820px) { .protocols { grid-template-columns: 1fr; } }
+  .proto {
+    border: 1px solid #3d2d1a;
+    border-radius: 10px;
+    background: linear-gradient(180deg, var(--panel-2), var(--panel) 40%);
+    padding: 30px 28px;
+  }
+  .proto h3 { font-size: 26px; font-weight: 400; margin: 8px 0 12px; }
+  .proto p { color: var(--muted); font-size: 15.5px; margin: 0 0 10px; }
+  .proto p code { font-size: 13px; color: var(--ink); }
+  .proto ul { margin: 14px 0 0; padding: 0 0 0 18px; color: var(--muted); font-size: 15px; }
+  .proto li { margin: 6px 0; }
+  .proto li::marker { color: var(--brass); }
+
+  /* code block */
+  .codepane {
+    background: #120c07;
+    border: 1px solid #3d2d1a;
+    border-radius: 10px;
+    padding: 24px 26px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 13.5px;
+    line-height: 1.8;
+  }
+  .codepane .c { color: var(--faint); font-style: italic; }
+  .codepane .k { color: var(--oxblood); }
+  .codepane .s { color: var(--sage); }
+  .codepane .f { color: var(--brass-bright); }
+  .codepane .p { color: var(--ink); }
+
+  /* CLI table */
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .table-scroll { overflow-x: auto; border: 1px solid #3d2d1a; border-radius: 10px; }
+  th, td { text-align: left; padding: 13px 20px; border-top: var(--stitch); }
+  thead th { border-top: none; font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--brass); background: var(--panel); font-weight: 500; }
+  td:first-child { font-family: var(--mono); font-size: 13.5px; white-space: nowrap; color: var(--ink); }
+  td:last-child { color: var(--muted); }
+  tbody tr { background: #1d140c; }
+  tbody tr:nth-child(even) { background: var(--panel); }
+
+  /* footer */
+  footer { padding: 64px 0 80px; }
+  .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; align-items: start; }
+  @media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr; } }
+  footer h2 { font-size: 30px; }
+  footer p { color: var(--muted); max-width: 52ch; }
+  .proof { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-top: 22px; line-height: 2; }
+  .proof b { color: var(--sage); font-weight: 500; }
+  .roadmap { border-left: 2px solid #3d2d1a; padding-left: 22px; }
+  .roadmap .eyebrow { display: block; margin-bottom: 12px; }
+  .roadmap ul { list-style: none; margin: 0; padding: 0; color: var(--muted); font-size: 15px; }
+  .roadmap li { padding: 7px 0; border-bottom: var(--stitch); }
+  .roadmap li:last-child { border-bottom: none; }
+  .colophon { margin-top: 56px; padding-top: 22px; border-top: var(--stitch); display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; font-family: var(--mono); font-size: 12px; color: var(--faint); letter-spacing: 0.06em; }
+
+  /* reveal on scroll */
+  .reveal { opacity: 0; transform: translateY(14px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="hero">
+      <div>
+        <span class="eyebrow">Open source · Solana · MIT</span>
+        <h1 class="wordmark">reins<span class="dot">.</span></h1>
+        <p class="tagline">Give your agent a wallet. <em>Keep the reins.</em></p>
+        <p class="lede">
+          A lean TypeScript wallet that lets AI agents pay for
+          <strong>x402</strong> and <strong>MPP</strong> pay-per-use APIs
+          automatically — with spend caps, daily budgets, cooldowns, and
+          approvals checked <strong>before a single lamport moves</strong>.
+        </p>
+        <div class="install"><span class="ps1">$</span> npm install <span class="pkg">reins</span></div>
+        <p class="hero-links">
+          <span>USDC on Solana</span><span>x402 v1 + v2</span><span>MPP solana/charge</span><span>4 deps</span>
+        </p>
+      </div>
+      <div class="terminal" aria-label="Demo of reins guardrails in a terminal">
+        <div class="terminal-bar"><i></i><i></i><i></i>&nbsp;examples/agent.ts — devnet</div>
+        <div class="terminal-body" id="term"></div>
+      </div>
+    </div>
+  </header>
+
+  <section class="reveal">
+    <div class="section-head">
+      <span class="eyebrow">Why this exists</span>
+      <h2>Agents are buying their own inputs now. Raw keypairs don't say no.</h2>
+      <p>
+        Data, inference, search, RPC — the pay-per-request rails already move real volume
+        on Solana. But an agent holding a bare keypair has no concept of <i>enough</i>.
+        reins is the missing middle layer: a wallet that says <i>yes</i> fast enough for
+        micropayments and <i>no</i> firmly enough to run overnight.
+      </p>
+    </div>
+    <div class="rails">
+      <div class="rail"><code class="rule">max-per-payment</code><h3>Per-service caps</h3><p>No single call to <code>api.x.com</code> may cost more than the cap you set — <code>'0.10'</code> means ten cents, ever.</p></div>
+      <div class="rail"><code class="rule">daily-budget</code><h3>Rolling budgets</h3><p>Per-service and global 24-hour budgets, plus a lifetime cap. Only settled payments count.</p></div>
+      <div class="rail"><code class="rule">cooldown</code><h3>Cooldowns</h3><p>A minimum gap between payments to the same service. Denials tell the agent exactly how long to wait.</p></div>
+      <div class="rail"><code class="rule">allowlist</code><h3>Allow &amp; block lists</h3><p>Pay only the services you named — by origin or hostname. Blocklist always wins.</p></div>
+      <div class="rail"><code class="rule">approval</code><h3>Human in the loop</h3><p>Payments over a threshold (or to flagged services) wait for your hook: Slack ping, push, CLI prompt.</p></div>
+      <div class="rail"><code class="rule">ledger</code><h3>Durable ledger</h3><p>Every payment lands in an append-only JSONL ledger, so budgets survive restarts and audits are trivial.</p></div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="section-head">
+      <span class="eyebrow">How a payment happens</span>
+      <h2>One <code style="font-size:0.85em">fetch</code>. Five checkpoints. Zero unbounded spending.</h2>
+    </div>
+    <ol class="flow">
+      <li><span class="step">402</span><div><h3>The API challenges</h3><p>Your agent calls a paid endpoint. The server answers <code>402 Payment Required</code> — an x402 v1 body, an x402 v2 <code>PAYMENT-REQUIRED</code> header, or an MPP <code>WWW-Authenticate: Payment</code> challenge. reins recognizes all three.</p></div></li>
+      <li><span class="step">POLICY</span><div><h3>The policy engine rules</h3><p>The challenge becomes a normalized payment intent — service, amount, asset, network — and runs the full gauntlet: blocklist → allowlist → network → asset → caps → cooldown → rate limit → budgets → approval. A denial throws <code>PolicyViolationError</code> with the exact rule that fired.</p></div></li>
+      <li><span class="step">SIGN</span><div><h3>The transfer is signed</h3><p>reins builds the spec-exact SVM transaction — compute budget, <code>TransferChecked</code> USDC to the recipient's token account, memo — and signs with the agent key. On x402, the facilitator co-signs as fee payer but can never move funds: its address appears in no instruction.</p></div></li>
+      <li><span class="step">RETRY</span><div><h3>The request retries, paid</h3><p>The same request goes back with <code>X-PAYMENT</code> (v1), <code>PAYMENT-SIGNATURE</code> (v2), or <code>Authorization: Payment</code> (MPP) attached. The server verifies, settles, and serves the resource.</p></div></li>
+      <li><span class="step">RECORD</span><div><h3>The ledger remembers</h3><p>Settlement receipts and transaction signatures land in the ledger, feeding tomorrow's budget math and <code>npx reins status</code>.</p></div></li>
+    </ol>
+  </section>
+
+  <section class="reveal">
+    <div class="section-head">
+      <span class="eyebrow">Two protocols, one wallet</span>
+      <h2>Speaks x402 and MPP. Your agent doesn't have to care.</h2>
+    </div>
+    <div class="protocols">
+      <div class="proto">
+        <span class="eyebrow">x402</span>
+        <h3>The volume rail</h3>
+        <p>The HTTP 402 protocol that's settled tens of millions of payments on Solana. reins implements the <code>exact</code> SVM scheme natively.</p>
+        <ul>
+          <li>v1 and v2 wire formats, auto-detected</li>
+          <li>Facilitator fee-payer co-signing (your agent needs no SOL)</li>
+          <li>Validated against the production x402.org facilitator</li>
+        </ul>
+      </div>
+      <div class="proto">
+        <span class="eyebrow">MPP</span>
+        <h3>The HTTP-native standard</h3>
+        <p>mppx ships Tempo and Stripe methods — reins contributes the Solana one: a <code>solana/charge</code> method any MPP server can verify.</p>
+        <ul>
+          <li>On-chain USDC transfer, memo-bound to the challenge (no replay)</li>
+          <li>Server-side verifier included — monetize your own API</li>
+          <li>Composes with the whole mppx ecosystem</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="reveal">
+    <div class="section-head">
+      <span class="eyebrow">The whole integration</span>
+      <h2>Policy is code you can read at 2am.</h2>
+    </div>
+    <div class="codepane"><pre style="margin:0"><code><span class="k">import</span> <span class="p">{ createReinsWallet }</span> <span class="k">from</span> <span class="s">'reins'</span>
+
+<span class="k">const</span> <span class="p">wallet</span> = <span class="k">await</span> <span class="f">createReinsWallet</span><span class="p">({</span>
+  <span class="p">policy: {</span>
+    <span class="p">dailyBudget:</span> <span class="s">'5.00'</span><span class="p">,</span>            <span class="c">// ≤ $5/day across everything</span>
+    <span class="p">defaults: {</span> <span class="p">maxPerPayment:</span> <span class="s">'0.10'</span><span class="p">,</span> <span class="p">cooldownMs:</span> 2_000 <span class="p">},</span>
+    <span class="p">allowlist: [</span><span class="s">'api.helpful-service.com'</span><span class="p">],</span>
+    <span class="p">approvalThreshold:</span> <span class="s">'0.50'</span><span class="p">,</span>      <span class="c">// bigger spends ask a human first</span>
+    <span class="f">onApprovalRequired</span><span class="p">: (intent) =&gt;</span> <span class="f">askSlack</span><span class="p">(intent),</span>
+  <span class="p">},</span>
+<span class="p">})</span>
+
+<span class="c">// 402s on this fetch are now paid automatically — within policy.</span>
+<span class="k">const</span> <span class="p">res</span> = <span class="k">await</span> <span class="p">wallet.</span><span class="f">fetch</span><span class="p">(</span><span class="s">'https://api.helpful-service.com/v1/answer'</span><span class="p">)</span></code></pre></div>
+  </section>
+
+  <section class="reveal">
+    <div class="section-head">
+      <span class="eyebrow">Command line</span>
+      <h2>A wallet you can check from the saddle.</h2>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td>npx reins init</td><td>Generate the agent keypair (gitignored, Solana-CLI compatible)</td></tr>
+          <tr><td>npx reins address</td><td>Print the agent's address</td></tr>
+          <tr><td>npx reins balance</td><td>SOL and USDC balances (devnet by default, --mainnet to opt in)</td></tr>
+          <tr><td>npx reins airdrop</td><td>Request devnet SOL for fees</td></tr>
+          <tr><td>npx reins status</td><td>Spend in the last 24h and lifetime, broken down by service</td></tr>
+          <tr><td>npx reins history</td><td>Every payment: when, what, to whom, which transaction</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <span class="eyebrow">Fund it like a prepaid card, not a vault</span>
+        <h2>Built lean, tested hard, yours to fork.</h2>
+        <p>
+          Self-custodied keys that never leave your machine. Four dependencies.
+          Devnet by default — mainnet, new assets, and every new service are
+          explicit opt-ins. The agent key is a hot key; budgets bound the blast
+          radius, by design.
+        </p>
+        <p class="proof">
+          <b>✓</b> 54 unit &amp; integration tests&nbsp;&nbsp;
+          <b>✓</b> wire format accepted by the production x402.org facilitator&nbsp;&nbsp;
+          <b>✓</b> MIT licensed
+        </p>
+      </div>
+      <div class="roadmap">
+        <span class="eyebrow">Reined in next</span>
+        <ul>
+          <li>Streaming payments — MPP sessions &amp; x402 <code>upto</code></li>
+          <li>Shared replay store for multi-instance servers</li>
+          <li>Token-2022 assets</li>
+          <li>Agent-framework tool wrappers</li>
+        </ul>
+      </div>
+    </div>
+    <div class="colophon">
+      <span>reins — the guardrailed wallet for Solana AI agents</span>
+      <span>MIT · built by &amp; for solana builders</span>
+    </div>
+  </footer>
+</div>
+
+<script>
+  // Terminal demo: an agent pays once, then the guardrails say no. Loops.
+  const LINES = [
+    ['t-cmd', '$ npx tsx examples/agent.ts'],
+    ['t-dim', 'agent 9AHT…QY7J · policy: 0.50/day · 0.05/payment · 2s cooldown'],
+    ['t-dim', ''],
+    ['t-cmd', '→ GET api.data.dev/quote'],
+    ['t-pay', '  402 challenge: 0.01 USDC · policy ok · transfer signed'],
+    ['t-ok',  '  ✓ 200 OK — settled 0.01 USDC  tx 5Kd…9fW'],
+    ['t-cmd', '→ GET api.data.dev/quote'],
+    ['t-no',  '  ✗ PolicyViolationError [cooldown] — retry in 1.4s'],
+    ['t-cmd', '→ GET api.sketchy.xyz/dump  (25.00 USDC)'],
+    ['t-no',  '  ✗ PolicyViolationError [allowlist] — not on the allowlist'],
+    ['t-dim', ''],
+    ['t-dim', 'spent today: 0.01 / 0.50 USDC · the reins held.'],
+  ];
+  const term = document.getElementById('term');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function render() {
+    term.innerHTML = '';
+    for (const [cls, text] of LINES) {
+      const div = document.createElement('div');
+      div.className = 'tline ' + cls;
+      div.textContent = text || ' ';
+      term.appendChild(div);
+    }
+    const cur = document.createElement('span');
+    cur.className = 'cursor';
+    term.appendChild(cur);
+    return [...term.querySelectorAll('.tline')];
+  }
+
+  function play() {
+    const nodes = render();
+    if (reduced) { nodes.forEach(n => n.classList.add('shown')); return; }
+    nodes.forEach((n, i) => setTimeout(() => n.classList.add('shown'), 450 + i * 620));
+    setTimeout(play, 450 + nodes.length * 620 + 6500);
+  }
+  play();
+
+  // Scroll reveals
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+</script>
+
+</body>
+</html>
